@@ -12,13 +12,13 @@ class DataRepository extends DataCallback with RedisModule {
       val expire = ttl.exists(client.expire(key, _))
       set && (ttl.isEmpty || expire)
     }
-    ZIO.cond(result, (), new RuntimeException(""))
+    ZIO.cond(result, (), new RuntimeException("Saving Data in the database was not successful"))
   }
 
   override def get(key: String, field: String): Task[String] =
     redisClient.withClient { client =>
       client.hget(key, field)
-    }.map(ZIO.succeed(_)).getOrElse(ZIO.fail(new RuntimeException("")))
+    }.map(ZIO.succeed(_)).getOrElse(ZIO.fail(new RuntimeException("Fetching data from Database failed")))
 
   override def increment(key: String, field: String, value: Long): Task[Unit] = ZIO.succeed {
     redisClient.withClient { client =>
@@ -30,6 +30,6 @@ class DataRepository extends DataCallback with RedisModule {
     val result = redisClient.withClient { client =>
       client.dbsize
     }
-    ZIO.cond(result.nonEmpty, result, new RuntimeException(""))
+    ZIO.cond(result.nonEmpty, result, new RuntimeException("Fetching data from Database failed"))
   }
 }
